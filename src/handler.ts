@@ -31,6 +31,7 @@
 
 */
 import { faker } from '@faker-js/faker'
+import { get } from 'lodash-es'
 import { parse } from './parser'
 import { toType } from './utils'
 import { RE_KEY, RE_PLACEHOLDER } from './constant'
@@ -343,16 +344,44 @@ export class Handler {
   }
 
   // 处理占位符，转换为最终值
-  placeholder(placeholder, obj, templateContext, options) {
+  placeholder(placeholder: string, parentValue: any, parentTemplate: any, options: Options<any>) {
     // console.log(options.context.path)
     // 1 key, 2 params
     RE_PLACEHOLDER.exec('')
     const parts = RE_PLACEHOLDER.exec(placeholder)
     const key = parts && parts[1]
-    const lkey = key && key.toLowerCase()
-    const okey = faker[lkey]
-    let params = (parts && parts[2]) || ''
+
+    // 占位符优先引用数据模板中的属性
+    if (parentValue && (key in parentValue))
+      return parentValue[key]
+
     const pathParts = this.splitPathToArray(key)
+    // 绝对路径 or 相对路径
+    if (
+      key.charAt(0) === '/'
+              || pathParts.length > 1
+    ) return this.getValueByKeyPath(key, options)
+
+    // 递归引用数据模板中的属性
+    if (parentTemplate
+          && (typeof parentTemplate === 'object')
+          && (key in parentValue)
+          && (placeholder !== parentValue[key]) // fix #15 避免自己依赖自己
+    ) {
+    // 先计算被引用的属性值
+      parentTemplate[key] = this.gen(parentTemplate[key], key, {
+        parentValue,
+        parentTemplate,
+      })
+      return parentTemplate[key]
+    }
+
+    // 如果未找到，则原样返回
+    const handle = get(faker, key)
+    if (!handle)
+      return placeholder
+
+    let params: any = (parts && parts[2]) || ''
 
     // 解析占位符的参数
     try {
@@ -362,7 +391,7 @@ export class Handler {
                 [BX9056: 各浏览器下 window.eval 方法的执行上下文存在差异](http://www.w3help.org/zh-cn/causes/BX9056)
                 应该属于 Window Firefox 30.0 的 BUG
             */
-      /* jshint -W061 */
+      // eslint-disable-next-line no-eval
       params = eval(`(function(){ return [].splice.call(arguments, 0 ) })(${params})`)
     }
     catch (error) {
@@ -373,62 +402,17 @@ export class Handler {
       params = parts[2].split(/,\s*/)
     }
 
-    // 占位符优先引用数据模板中的属性
-    if (obj && (key in obj))
-      return obj[key]
-
-    // @index @key
-    // if (RE_INDEX.test(key)) return +options.name
-    // if (RE_KEY.test(key)) return options.name
-
-    // 绝对路径 or 相对路径
-    if (
-      key.charAt(0) === '/'
-            || pathParts.length > 1
-    ) return this.getValueByKeyPath(key, options)
-
-    // 递归引用数据模板中的属性
-    if (templateContext
-            && (typeof templateContext === 'object')
-            && (key in templateContext)
-            && (placeholder !== templateContext[key]) // fix #15 避免自己依赖自己
-    ) {
-      // 先计算被引用的属性值
-      templateContext[key] = Handler.gen(templateContext[key], key, {
-        parentValue: obj,
-        parentTemplate: templateContext,
-      })
-      return templateContext[key]
-    }
-
-    // 如果未找到，则原样返回
-    if (!(key in Random) && !(lkey in Random) && !(okey in Random))
-      return placeholder
-
     // 递归解析参数中的占位符
     for (let i = 0; i < params.length; i++) {
       RE_PLACEHOLDER.exec('')
       if (RE_PLACEHOLDER.test(params[i]))
-        params[i] = Handler.placeholder(params[i], obj, templateContext, options)
+        params[i] = this.placeholder(params[i], parentValue, parentTemplate, options)
     }
 
-    const handle = Random[key] || Random[lkey] || Random[okey]
-    switch (toType(handle)) {
-      case 'array':
-        // 自动从数组中取一个，例如 @areas
-        return Random.pick(handle)
-      case 'function':
-        // 执行占位符方法（大多数情况）
-        handle.options = options
-        var re = handle.apply(Random, params)
-        if (re === undefined)
-          re = '' // 因为是在字符串中，所以默认为空字符串。
-        delete handle.options
-        return re
-    }
+    return handle.apply(faker, params)
   }
 
-  getValueByKeyPath(key, options) {
+  getValueByKeyPath(key: string, options: Options<any>) {
     const originalKey = key
     const keyPathParts = this.splitPathToArray(key)
     let absolutePathParts = []
