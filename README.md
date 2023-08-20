@@ -43,6 +43,7 @@ https://fakerjs.dev/api/helpers.html
 **生成规则和示例：**
 
 #### 1. 属性值是字符串 String
+
 1. `'name|min-max': string`
 
 通过重复 string 生成一个字符串，重复次数大于等于 min，小于等于 max。

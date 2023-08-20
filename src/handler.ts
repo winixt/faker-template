@@ -30,10 +30,10 @@
         * Handler.placeholder( placeholder, context, templateContext, options )
 
 */
-import { faker } from '@faker-js/faker'
 import { get } from 'lodash-es'
 import { parse } from './parser'
 import { toType } from './utils'
+import { faker } from './faker'
 import { RE_KEY, RE_PLACEHOLDER } from './constant'
 import type { Context, Options } from './types'
 
@@ -66,12 +66,12 @@ export class Handler {
       // 属性值模板的上下文
       parentTemplate: context?.parentTemplate || template,
       // 最终值的根
-      root: context.root || context.root,
+      root: context?.root || context?.parentValue,
       // 模板的根
-      rootTemplate: context.rootTemplate || context.parentTemplate || template,
+      rootTemplate: context?.rootTemplate || context?.parentTemplate || template,
     }
 
-    const rule = name ? parse(name) : null
+    const rule = name ? parse(name) : {}
     const type = toType(template)
     let data
 
@@ -100,7 +100,7 @@ export class Handler {
     return template
   }
 
-  array(options: Options<any[]>) {
+  array(options: Options<any[] & { __order_index?: number }>) {
     let result = []
 
     // 'name|1': []
@@ -199,7 +199,6 @@ export class Handler {
     const result = {}
 
     // 'obj|min-max': {}
-    /* jshint -W041 */
     if (options.rule.min != null) {
       let keys = Object.keys(options.template)
       keys = faker.helpers.shuffle(keys)
@@ -296,7 +295,6 @@ export class Handler {
     let result = ''
     if (options.template.length) {
       //  'foo': '★',
-      /* jshint -W041 */
       if (options.rule.count == null)
         result += options.template
 

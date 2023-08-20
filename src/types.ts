@@ -9,7 +9,6 @@ export interface Context {
   parentTemplate: any
   root?: any
   rootTemplate?: any
-  __order_index?: number
 }
 
 export interface Options<T> {
