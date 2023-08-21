@@ -1,7 +1,7 @@
 {
   "name": "@qlin/faker-template",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "基于 faker.js 实现的 mock.js",
   "author": "winixt",
   "license": "ISC",
