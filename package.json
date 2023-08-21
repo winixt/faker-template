@@ -1,7 +1,7 @@
 {
   "name": "@qlin/faker-template",
   "type": "module",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "基于 faker.js 实现的 mock.js",
   "author": "winixt",
   "license": "ISC",
@@ -13,7 +13,7 @@
     "fetch",
     "request"
   ],
-  "main": "dist/faker-template.js",
+  "main": "dist/faker-template.cjs",
   "module": "dist/faker-template.js",
   "files": [
     "es",
