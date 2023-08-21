@@ -13,8 +13,8 @@
     "fetch",
     "request"
   ],
-  "main": "dist/request.js",
-  "module": "dist/request.js",
+  "main": "dist/faker-template.js",
+  "module": "dist/faker-template.js",
   "files": [
     "es",
     "lib",
@@ -25,12 +25,12 @@
     "build": "vite build",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
+  "peerDependencies": {
+    "@faker-js/faker": "^8.0.0"
+  },
   "dependencies": {
     "@types/lodash-es": "^4.17.7",
     "lodash-es": "^4.17.21"
-  },
-  "peerDependencies": {
-    "@faker-js/faker": "^8.0.0"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^0.38.6",
